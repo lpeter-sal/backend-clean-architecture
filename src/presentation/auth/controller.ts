@@ -1,14 +1,22 @@
 import { Request, Response } from "express"
-import { RegisterUserDto } from "../../domain";
+import { AuthRepository, CustomError, RegisterUserDto, UNEXPECTED_ERROR } from "../../domain";
 
 
 
 export class AuthController {
 
     // INJECCION DE DEPENDENCIAS
+    constructor(
+        private readonly authRepository: AuthRepository,
+    ) {}
 
-    constructor() {
+    private handleError = ( error: unknown, res: Response ) => {
+        if( error instanceof CustomError ) {
+            return res.status(error.statusCode).json( { ErrorRequest: error.errorObject } );
+        }
 
+        console.log(error);
+        return res.status(500).json({ ErrorServer: UNEXPECTED_ERROR });
     }
 
 
@@ -17,9 +25,9 @@ export class AuthController {
         const [error, registerUserDto] = RegisterUserDto.create(req.body);
         if( error ) return res.status(400).json({ error });
 
-
-
-        res.json( registerUserDto );
+        this.authRepository.register(registerUserDto!)
+            .then( user => res.json(user) )
+            .catch( error => this.handleError( error, res ) );
     }
 
     loginUser = ( req: Request, res: Response ) => {

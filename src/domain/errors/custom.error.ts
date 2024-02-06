@@ -1,32 +1,33 @@
+import { UNEXPECTED_ERROR } from "./error.catalog";
 
 
 export class CustomError extends Error {
 
     constructor(
         public readonly statusCode: number,
-        public readonly errorMessage: string
+        public readonly errorObject: object
     ) {
-        super(errorMessage);
+        super();
     }
 
-    static badRequest( message: string){
-        return new CustomError(400, message);
+    static badRequest( erroObject: object){
+        return new CustomError(400, erroObject);
     }
 
-    static unauthorized( message: string){
-        return new CustomError(401, message);
+    static unauthorized( erroObject: object){
+        return new CustomError(401, erroObject);
     }
 
-    static forbidden( message: string){
-        return new CustomError(403, message);
+    static forbidden( erroObject: object){
+        return new CustomError(403, erroObject);
     }
 
-    static notFound( message: string){
-        return new CustomError(404, message);
+    static notFound( erroObject: object){
+        return new CustomError(404, erroObject);
     }
 
-    static internalServer( message: string = 'Internal Server Error'){
-        return new CustomError(500, message);
+    static internalServer( erroObject: object = UNEXPECTED_ERROR ){
+        return new CustomError(500, erroObject);
     }
     
 }
