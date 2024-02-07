@@ -1,4 +1,4 @@
-import { CustomError, UserEntity } from "../../domain";
+import { CustomError, INVALID_REQUEST, UserEntity } from "../../domain";
 
 
 
@@ -6,16 +6,16 @@ export class UserMapper {
 
     static userEntityFromObject(object: { [key: string]:any }) {
 
-        const { id, _id, name, username, password, roles } = object;
+        const { id, _id, name, username, password, role } = object;
 
         if( !_id || !id ) {
-            throw CustomError.badRequest('Falta un id');
+            throw CustomError.badRequest(INVALID_REQUEST);
         }
 
-        if( !name ) throw CustomError.badRequest('Falta un name');
-        if( !username ) throw CustomError.badRequest('Falta un username');
-        if( !password ) throw CustomError.badRequest('Falta el password');
-        if( !roles ) throw CustomError.badRequest('Faltan los roles');
+        if( !name ) throw CustomError.badRequest(INVALID_REQUEST);
+        if( !username ) throw CustomError.badRequest(INVALID_REQUEST);
+        if( !password ) throw CustomError.badRequest(INVALID_REQUEST);
+        if( !role ) throw CustomError.badRequest(INVALID_REQUEST);
 
 
         return new UserEntity(
@@ -23,7 +23,7 @@ export class UserMapper {
             name,
             username,
             password,
-            roles,
+            role,
         );
     }
 
