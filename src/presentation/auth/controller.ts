@@ -1,6 +1,5 @@
 import { Request, Response } from "express"
-import { AuthRepository, CustomError, RegisterUserDto, UNEXPECTED_ERROR } from "../../domain";
-import { JwtAdapter } from "../../config";
+import { AuthRepository, CustomError, LoginUser, LoginUserDto, RegisterUser, RegisterUserDto, UNEXPECTED_ERROR } from "../../domain";
 import { UserModel } from "../../data/mongodb";
 
 
@@ -27,31 +26,31 @@ export class AuthController {
         const [error, registerUserDto] = RegisterUserDto.create(req.body);
         if( error ) return res.status(400).json({ error });
 
-        this.authRepository.register(registerUserDto!)
-            .then( async(user) => {
-                res.json({
-                    user,
-                    token: await JwtAdapter.genereteToken({ username: user.username, roles: user.role })
-                });
-            })
-            .catch( error => this.handleError( error, res ) );
+        new RegisterUser(this.authRepository)
+            .execute( registerUserDto! )
+            .then( data => res.json(data) )
+            .catch( error => this.handleError(error, res) );
     }
 
-    loginUser = ( req: Request, res: Response ) => {
-        res.json('LoginUser controller')
+    loginUser = async( req: Request, res: Response ) => {
+
+        const [ error, loginUserDto ] = LoginUserDto.authentication(req.body);
+        if( error ) return res.status(400).json({ error });
+        
+        new LoginUser(this.authRepository)
+            .execute( loginUserDto! )
+            .then( data => res.json(data) )
+            .catch( error => this.handleError( error, res) );
     }
 
     getUsers = ( req: Request, res: Response ) => {
-        console.log(req.body.payload);
         UserModel.find()
             .then( users => {
                 res.json({
                     // users,
-                    token: req.body.payload
+                    user: req.body.user
                 });
             })
             .catch( error => this.handleError( error, res ) );
     }
-
-
 }

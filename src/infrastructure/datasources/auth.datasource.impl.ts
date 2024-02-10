@@ -1,5 +1,5 @@
 import { UserModel } from "../../data/mongodb";
-import { AuthDatasource, CustomError, REGISTERED_USER, RegisterUserDto, UserEntity } from "../../domain";
+import { AuthDatasource, CustomError, INVALID_REQUEST, LoginUserDto, REGISTERED_USER, RegisterUserDto, USER_CREDENTIALS, UserEntity } from "../../domain";
 import { BcryptAdapter } from '../../config/bcrypt';
 import { UserMapper } from "../mappers/user.mapper";
 
@@ -15,13 +15,41 @@ export class AuthDatasourceImpl implements AuthDatasource {
         private readonly comparePassword: CompareFunction = BcryptAdapter.compare,
     ){}
 
+    async login(loginUserDto: LoginUserDto): Promise<UserEntity> {
+
+        const { username, password } = loginUserDto;
+
+        try {
+
+            if( !username || !password) throw CustomError.badRequest(INVALID_REQUEST);
+
+            // 1. Verificar si el username existe
+            const user = await UserModel.findOne({ username });
+            if( !user ) throw CustomError.badRequest(USER_CREDENTIALS);
+
+            // 2. Comparar la contraseña
+            const verifyPassword = this.comparePassword( password, user.password );
+            if( verifyPassword == false ) throw CustomError.badRequest(USER_CREDENTIALS);
+
+
+            //3. Mapear la respuesta a nuestra entidad
+            return UserMapper.userEntityFromObject(user);
+
+        } catch (error) {
+            if( error instanceof CustomError ){
+                throw error;
+            }
+            throw CustomError.internalServer();
+        }
+    }
+
     async register( registerUserDto: RegisterUserDto ): Promise<UserEntity> {
 
         const { name, username, password } = registerUserDto;
 
         try {
 
-            // 1. Verificar si el correo existe
+            // 1. Verificar si el username existe
             const exists = await UserModel.findOne({ username });
             if( exists ) throw CustomError.badRequest(REGISTERED_USER);
 
@@ -47,9 +75,6 @@ export class AuthDatasourceImpl implements AuthDatasource {
             
             throw CustomError.internalServer();
         }
-
     }
-
-
 
 }
